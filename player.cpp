@@ -51,6 +51,10 @@ void Player::keyPressEvent(QKeyEvent *event)
             t.scale(-1, 1);
             setTransform(t);
             rightside = false;
+
+            if (x()<=100) {
+                QMessageBox::information(nullptr, "Congratulations!", "Level 1 Complete!");
+            }
         }
         break;
 
@@ -60,6 +64,10 @@ void Player::keyPressEvent(QKeyEvent *event)
         if (!rightside) {
             setTransform(QTransform());
             rightside = true;
+
+            if (x()<=100) {
+                QMessageBox::information(nullptr, "Congratulations!", "Level 1 Complete!");
+            }
         }
         break;
 
@@ -112,8 +120,8 @@ void Player::physics()
     qreal ny = y() + velocityY;
 
     // Simple ground collision
-    if (ny >= 450) {
-        ny = 450;
+    if (ny >= 315) {
+        ny = 315;
         velocityY = 0;
         isJumping = false;
         jumpnum = 0;

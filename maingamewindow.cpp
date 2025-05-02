@@ -19,11 +19,11 @@ GameWindow::GameWindow(QWidget *parent)
 {
     // Create the QGraphicsScene, which acts as the canvas for all game items.
     scene = new QGraphicsScene(this); // 'this' sets GameWindow as parent for memory management.
-    scene->setSceneRect(0, 0, 800, 600); // Set the coordinate system and size of the scene (increased height for platforms).
+    scene->setSceneRect(0, 0, 800, 400); // Set the coordinate system and size of the scene (increased height for platforms).
 
     // Create the QGraphicsView, a widget to display the scene.
     view = new QGraphicsView(scene, this); // Link view to scene and set GameWindow as parent.
-    view->setFixedSize(800, 600); // Set a fixed size for the view (matching scene).
+    view->setFixedSize(800, 400); // Set a fixed size for the view (matching scene).
     view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff); // Hide scroll bars.
     view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
@@ -105,7 +105,7 @@ void GameWindow::setupLevel1()
     qDebug("Setting up Level 1..."); // Debug message.
 
     // --- Add Background Image ---
-    QPixmap bgPixmap(":/images/images/images.jpg"); // Load background image from resources.
+    QPixmap bgPixmap(":/images/images/backgroundL1.jpg"); // Load background image from resources.
     if (bgPixmap.isNull()) {
         qDebug() << "Error loading background image!";
     } else {
@@ -152,7 +152,7 @@ void GameWindow::setupLevel1()
 
     // Set the player's initial position on the floor platform.
     // Position the player's bottom edge just above the floor platform's top edge.
-    qreal initialPlayerX = 50; // Starting X position.
+    qreal initialPlayerX = 715; // Starting X position.
     qreal initialPlayerY = floorPlatform->y() - player->boundingRect().height() - 1; // Y position just above floor.
     player->setPos(initialPlayerX, initialPlayerY);
 
