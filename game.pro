@@ -12,7 +12,7 @@ SOURCES += \
     enemy.cpp \
     main.cpp \
     maingamewindow.cpp \
-+   platform.cpp \
+    platform.cpp \
     player.cpp \
     trap.cpp
 

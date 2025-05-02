@@ -1,100 +1,97 @@
-#include "maingamewindow.h"
-#include <QGraphicsRectItem>
-#include <QDebug>
-#include "player.h"
-#include <QPixmap>
-#include <QKeyEvent>
-#include <platform.h>
+#include "maingamewindow.h" // Include the header file for our GameWindow class.
+#include <QGraphicsRectItem>  // Include for QGraphicsRectItem (used for simple shapes, though Platform is preferred).
+#include <QDebug>             // Include for qDebug() for debugging output.
+#include "player.h"           // Include the header file for the Player class.
+#include <QPixmap>            // Include for QPixmap, used for handling images.
+#include <QKeyEvent>          // Include for QKeyEvent (used in player, though included here for context).
+#include "platform.h"         // Include the header file for the Platform class.
+#include <QGraphicsItem>      // Include for QGraphicsItem base class.
 
 // Constructor for the GameWindow class.
-// It takes an optional QWidget pointer 'parent' and initializes member variables.
+// Initializes member variables and sets up the initial start screen.
 GameWindow::GameWindow(QWidget *parent)
-    : QWidget(parent), // Call the base class (QWidget) constructor with the parent.
-    scene(nullptr), // Initialize the scene pointer to nullptr.
-    view(nullptr), // Initialize the view pointer to nullptr.
-    startMessage(nullptr), // Initialize the startMessage pointer to nullptr.
-    gameStarted(false) // Initialize the gameStarted flag to false.
-
+    : QWidget(parent), // Call the base class (QWidget) constructor.
+    scene(nullptr), // Initialize scene pointer.
+    view(nullptr), // Initialize view pointer.
+    startMessage(nullptr), // Initialize startMessage pointer.
+    backgroundItem(nullptr), // Initialize backgroundItem pointer.
+    gameStarted(false) // Initialize gameStarted flag.
 {
-    // Create the QGraphicsScene, which is the canvas for our game items.
-    scene = new QGraphicsScene(this); // 'this' sets the GameWindow as the parent, ensuring proper memory management.
-    scene->setSceneRect(0, 0, 800, 400); // Set the coordinate system and size of the scene.
+    // Create the QGraphicsScene, which acts as the canvas for all game items.
+    scene = new QGraphicsScene(this); // 'this' sets GameWindow as parent for memory management.
+    scene->setSceneRect(0, 0, 800, 600); // Set the coordinate system and size of the scene (increased height for platforms).
 
-    // Create the QGraphicsView, which is a widget that visualizes the scene.
-    view = new QGraphicsView(scene, this); // Link the view to the scene and set GameWindow as parent.
-    view->setFixedSize(800, 400); // Set a fixed size for the view widget.
-    view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff); // Hide the horizontal scroll bar.
-    view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff); // Hide the vertical scroll bar.
+    // Create the QGraphicsView, a widget to display the scene.
+    view = new QGraphicsView(scene, this); // Link view to scene and set GameWindow as parent.
+    view->setFixedSize(800, 600); // Set a fixed size for the view (matching scene).
+    view->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff); // Hide scroll bars.
+    view->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
 
     // --- Setup for the initial start screen ---
 
-    // Create a QGraphicsTextItem to display the start message.
+    // Create a QGraphicsTextItem for the start message.
     startMessage = new QGraphicsTextItem("Click to Start Game");
-    QFont font("Arial", 30); // Create a QFont object for styling the text.
-    startMessage->setFont(font); // Set the font for the start message.
-    startMessage->setDefaultTextColor(Qt::white); // Set the text color to white.
+    QFont font("Arial", 30); // Set font style and size.
+    startMessage->setFont(font);
+    startMessage->setDefaultTextColor(Qt::white); // Set text color.
 
-    // Calculate the position to center the message in the scene.
+    // Center the start message in the scene.
     qreal messageX = (scene->width() - startMessage->boundingRect().width()) / 2;
     qreal messageY = (scene->height() - startMessage->boundingRect().height()) / 2;
-    startMessage->setPos(messageX, messageY); // Set the position of the start message in the scene.
+    startMessage->setPos(messageX, messageY);
 
-    // Add the start message item to the scene.
+    // Add the start message to the scene.
     scene->addItem(startMessage);
 
     // --- Layout for the GameWindow ---
 
-    // Create a QVBoxLayout to arrange widgets vertically.
+    // Use a QVBoxLayout to arrange the view vertically.
     QVBoxLayout *layout = new QVBoxLayout;
     layout->addWidget(view); // Add the QGraphicsView to the layout.
     setLayout(layout); // Set the layout for the GameWindow widget.
 
-    // Set the title of the GameWindow.
+    // Set the window title.
     setWindowTitle("Prince of Persia");
 
-    // The game starts with the start screen displayed.
-    // The actual content of Level 1 will be set up later when startGame() is called.
+    // The game starts with the start screen. setupLevel1() is called when the user clicks.
 }
 
 // Destructor for the GameWindow class.
 GameWindow::~GameWindow()
 {
-    // Since 'scene' and 'view' were created with 'this' as their parent,
-    // QT's object ownership system will automatically delete them when the GameWindow is destroyed.
+    // scene, view, startMessage, and backgroundItem are parented to 'this',
+    // so QT's object ownership handles their deletion automatically.
 }
 
 // Override of the mousePressEvent handler to detect clicks on the GameWindow.
 void GameWindow::mousePressEvent(QMouseEvent *event)
 {
-    // Check if the game has not started yet and the left mouse button was pressed.
+    // Check if the game hasn't started and the left mouse button was clicked.
     if (!gameStarted && event->button() == Qt::LeftButton)
     {
-        startGame(); // If true, call the startGame() slot.
+        startGame(); // Transition to the game setup.
     }
     else
     {
-        // If the game has already started or it's not a left click,
-        // pass the event to the base class's mousePressEvent handler.
-        // This is important so that if you add clickable items to the scene later,
-        // the event can be processed by the QGraphicsView and delivered to those items.
-
-        QWidget::mousePressEvent(event); // Call the mousePressEvent of the base class (QWidget).
+        // If the game is already started or it's not a left click,
+        // pass the event to the base class for potential handling by items in the scene.
+        QWidget::mousePressEvent(event);
     }
 }
 
 // Slot function to transition from the start screen to the game.
 void GameWindow::startGame()
 {
-    // Check if the game hasn't been started already (prevents starting multiple times).
+    // Prevent starting the game multiple times.
     if (!gameStarted)
     {
-        gameStarted = true; // Set the flag to indicate the game has started.
+        gameStarted = true; // Set the game started flag.
 
-        // Remove and delete the start message item from the scene.
-        if (startMessage) { // Check if the start message item exists.
-            scene->removeItem(startMessage); // Remove the item from the scene.
-            delete startMessage; // Delete the QGraphicsTextItem object from memory.
-            startMessage = nullptr; // Set the pointer to nullptr to avoid dangling pointers.
+        // Remove and delete the start message item.
+        if (startMessage) {
+            scene->removeItem(startMessage);
+            delete startMessage;
+            startMessage = nullptr;
         }
 
         // Call the function to set up the content of Level 1.
@@ -105,84 +102,94 @@ void GameWindow::startGame()
 // Slot function to set up the elements of Level 1.
 void GameWindow::setupLevel1()
 {
-    // This function is called when the game transitions from the start screen to Level 1.
-    // Its responsibility is to populate the scene with all the initial elements for Level 1:
-    // platforms, obstacles, enemies, the player, and any level-specific decorations.
+    qDebug("Setting up Level 1..."); // Debug message.
 
-    qDebug("Setting up Level 1..."); // Print a debug message to confirm this function is executed.
+    // --- Add Background Image ---
+    QPixmap bgPixmap(":/images/images/images.jpg"); // Load background image from resources.
+    if (bgPixmap.isNull()) {
+        qDebug() << "Error loading background image!";
+    } else {
+        // Scale background to scene size and add to scene.
+        bgPixmap = bgPixmap.scaled(scene->width(), scene->height(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+        backgroundItem = scene->addPixmap(bgPixmap);
+        backgroundItem->setZValue(-1); // Ensure background is behind other items.
+    }
 
-<<<<<<< HEAD
+    // --- Create and Add Platforms ---
+    // Create the main floor platform using the Platform class.
+    // Platform(x, y, width, height)
     Platform *floorPlatform = new Platform(0, scene->height() - 50, scene->width(), 50);
-    scene->addItem(floorPlatform); // Add the floor platform item to the QGraphicsScene.
-=======
-    QPixmap bgPixmap(":/images/images/images.jpg");
-    bgPixmap = bgPixmap.scaled(scene->width(), scene->height(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-    QGraphicsPixmapItem* bgItem = scene->addPixmap(bgPixmap);
-    bgItem->setZValue(-1);  // Ensure background is behind everything else
+    scene->addItem(floorPlatform); // Add the floor platform to the scene.
 
-    // --- Add the Floor ---
-    // Add a simple green rectangle at the bottom of the scene to represent the floor.
-    // This visually confirms that setupLevel1 has been called.
-    // QGraphicsRectItem(x, y, width, height)
-    QGraphicsRectItem *floor = new QGraphicsRectItem(0, scene->height() - 50, scene->width(), 50);
-    floor->setBrush(Qt::darkGreen); // Set the fill color of the rectangle to dark green.
-    scene->addItem(floor); // Add the floor rectangle item to the QGraphicsScene.
->>>>>>> 77e3244 (game polished and ending of level 1 implemented)
+    // Create an example floating platform.
+    // Position relative to the scene and the floor.
+    Platform *floatingPlatform = new Platform(200, scene->height() - 150, 150, 20); // Adjusted size for better landing
+    scene->addItem(floatingPlatform); // Add the floating platform to the scene.
 
-    Platform *floatingPlatform = new Platform(200, scene->height() - 150, 100, 20);
-    scene->addItem(floatingPlatform); // Add the floating platform item to the scene.
+    // ** Add more Platform objects here to build your level layout. **
+    // Example:
+    // Platform *anotherPlatform = new Platform(500, scene->height() - 250, 100, 20);
+    // scene->addItem(anotherPlatform);
 
-    // ** You will add more platforms and obstacles here based on your Level 1 design. **
-    // Examples:
+    // --- Create and Add the Player ---
+    Player * player = new Player(); // Create a Player object.
 
-    // Create an instance of our Player class.
-    Player * player = new Player();
-
+    // Load the player's main character image from resources.
     QPixmap playerPixmap(":/images/images/PRINCE_OF_PERSIA_MAIN_CHARACTER-removebg-preview.png");
 
-    // Check if the pixmap loaded successfully
+    // Check if the player image loaded successfully.
     if (playerPixmap.isNull()) {
         qDebug() << "Error loading player image!";
     } else {
-        // Scale the pixmap to a suitable size for the player character.
-        // You can adjust these dimensions as needed.
-        playerPixmap = playerPixmap.scaled(100, 100, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+        // Scale the player image.
+        // Using scaledToWidth/Height ensures aspect ratio is kept.
+        playerPixmap = playerPixmap.scaledToWidth(50); // Set player width to 50 pixels.
+        // playerPixmap = playerPixmap.scaledToHeight(50); // Height will be scaled proportionally
     }
-
-<<<<<<< HEAD
-    playerPixmap = playerPixmap.scaledToWidth(50); // Scale the width to 50 pixels.
-    playerPixmap = playerPixmap.scaledToHeight(50); // Scale the height to 50 pixels.
-=======
-    // Set the initial position of the player in the scene.
-    // the player is placed just above the floor rectangle we added.
-    qreal initialPlayerX = 725; // Starting x-position, adjust as needed.
-    qreal initialPlayerY = scene->height() - 50 - player->pixmap().height(); // Position just above the floor.
-    player->setPos(initialPlayerX, initialPlayerY); // Set the player's position in the scene.
->>>>>>> 77e3244 (game polished and ending of level 1 implemented)
 
     // Set the loaded and scaled image as the pixmap for the player item.
     player->setPixmap(playerPixmap);
 
-    player->setPos(50, floorPlatform->y() - player->boundingRect().height() - 1);
+    // Set the player's initial position on the floor platform.
+    // Position the player's bottom edge just above the floor platform's top edge.
+    qreal initialPlayerX = 50; // Starting X position.
+    qreal initialPlayerY = floorPlatform->y() - player->boundingRect().height() - 1; // Y position just above floor.
+    player->setPos(initialPlayerX, initialPlayerY);
 
-    // Add the player item to the QGraphicsScene so it becomes visible.
+    // Add the player item to the QGraphicsScene.
     scene->addItem(player);
 
-    // For the player's keyPressEvent and keyreleaseEvent to be called,the player item needs to be focusable and have focus.
+    // --- Enable Player Input ---
+    // Make the player item focusable to receive keyboard events.
     player->setFlag(QGraphicsItem::ItemIsFocusable);
-
-    // Set the keyboard input focus to the player item.This ensures that key events go directly to the player.
+    // Give keyboard focus to the player item.
     player->setFocus();
-connect(player, &Player::playerDied, this, &GameWindow::restartWindow);
+
+    // --- Connect Signals and Slots ---
+    // Connect the playerDied signal from the player to the restartWindow slot in GameWindow.
+    // This restarts the game when the player dies.
+    connect(player, &Player::playerDied, this, &GameWindow::restartWindow);
 
 
-    // --- Other Level 1 Setup (To be added later) ---
-    // This is where you would add instances of your Enemy class, Obstacle class (spikes, fire, etc.),
-    // items (coins, power-ups), and potentially background elements specific to Level 1.
+    // --- Other Level 1 Setup (Add Enemies, Traps, Items here) ---
+    // Example (you will uncomment and implement this later):
+    // Trap * spikeTrap = new Trap(":/images/images/spike_trap.png");
+    // spikeTrap->setPos(300, floorPlatform->y() - spikeTrap->boundingRect().height());
+    // scene->addItem(spikeTrap);
 
+    // Enemy * basicEnemy = new Enemy(":/images/images/enemy_image.png");
+    // basicEnemy->setPos(600, floorPlatform->y() - basicEnemy->boundingRect().height());
+    // scene->addItem(basicEnemy);
 }
+
+// Slot function to restart the game window.
 void GameWindow::restartWindow(){
+    // Close the current window.
     this->close();
+    // Create a new GameWindow instance.
     GameWindow *newGame = new GameWindow();
+    // Show the new game window.
     newGame->show();
+    // Note: The old GameWindow and its scene/items will be deleted
+    // when the event loop processes the close() event.
 }

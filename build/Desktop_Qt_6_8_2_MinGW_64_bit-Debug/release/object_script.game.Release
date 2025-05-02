@@ -1,0 +1,10 @@
+release/enemy.o
+release/main.o
+release/maingamewindow.o
+release/platform.o
+release/player.o
+release/trap.o
+release/qrc_res.o
+release/moc_maingamewindow.o
+release/moc_player.o
+release/moc_trap.o

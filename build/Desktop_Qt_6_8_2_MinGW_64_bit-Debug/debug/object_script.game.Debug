@@ -1,0 +1,10 @@
+debug/enemy.o
+debug/main.o
+debug/maingamewindow.o
+debug/platform.o
+debug/player.o
+debug/trap.o
+debug/qrc_res.o
+debug/moc_maingamewindow.o
+debug/moc_player.o
+debug/moc_trap.o

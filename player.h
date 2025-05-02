@@ -3,58 +3,60 @@
 
 #include <QObject>
 #include <QGraphicsPixmapItem>
-#include <QGraphicsTextItem>
 #include <QTimer>
 #include <QKeyEvent>
+#include <QGraphicsRectItem>
+#include <QGraphicsTextItem>
+#include <QTransform>
 
-// Player class inherits from QObject and QGraphicsPixmapItem to support signals/slots and graphics item.
-class Player : public QObject, public QGraphicsPixmapItem
-{
+class Player : public QObject, public QGraphicsPixmapItem {
     Q_OBJECT
 
 public:
-    // Constructor: optional score display and parent GraphicsItem
-    Player(QGraphicsTextItem *score = nullptr, QGraphicsItem *parent = nullptr);
+    explicit Player(QGraphicsTextItem *score = nullptr, QGraphicsItem *parent = nullptr);
+    ~Player() override = default;
 
-    // Public state variables
-    qreal velocityX;
-    qreal velocityY;
-    const qreal moveSpeed = 10.0;
-    bool isJumping;
-    const qreal gravity = 1.0;
-    const qreal jumpStrength = -14.0;  // Retained jump strength from main branch
-    bool movingLeft = false;
-    bool movingRight = false;
-    bool rightside = true;
-    bool isDying;
-    int standingheight = 100;  // Added standing height
-    int crouchingheight = 55;  // Added crouching height
-    bool isCrouching = false;
-    QTimer * movementTimer;
-    QPixmap standingPixmap;
-    QPixmap crouchingPixmap;
-    QPixmap attackingPixmap;
-    QGraphicsRectItem * healthBar;
-    int health = 100;
     void updateHealth(int damage);
-    bool isattacking = false;
-
-private:
-    QTimer *movementTimer;
-    int jumpnum;
 
 protected:
-    // Override event handlers
     void keyPressEvent(QKeyEvent *event) override;
     void keyReleaseEvent(QKeyEvent *event) override;
 
 private slots:
     void physics();
-<<<<<<< HEAD
-=======
+
 signals:
     void playerDied();
->>>>>>> 77e3244 (game polished and ending of level 1 implemented)
+
+private:
+    // Movement and state
+    qreal velocityX;
+    qreal velocityY;
+    bool isJumping;
+    bool isCrouching;
+    bool movingLeft;
+    bool movingRight;
+    bool rightside;
+    bool isattacking;
+    int jumpnum;
+
+    // Appearance
+    QPixmap standingPixmap;
+    QPixmap attackingPixmap;
+    QPixmap crouchingPixmap;
+    static constexpr int standingHeight = 100;
+    static constexpr int crouchingHeight = 50;
+
+    // Gameplay
+    QTimer *movementTimer;
+    QGraphicsRectItem *healthBar;
+    int health;
+    qreal moveSpeed;
+    qreal gravity;
+    qreal jumpStrength;
+
+    // Optional UI
+    QGraphicsTextItem *scoreText;
 };
 
 #endif // PLAYER_H

@@ -2,129 +2,88 @@
 #include "trap.h"
 #include <QGraphicsScene>
 #include <QDebug>
-#include <QGraphicsPixmapItem>
-#include <QGraphicsTextItem>
-<<<<<<< HEAD
-
-=======
 #include <QMessageBox>
 #include "maingamewindow.h"
->>>>>>> 77e3244 (game polished and ending of level 1 implemented)
-Player::Player(QGraphicsTextItem * inScore)
-    : velocityX(0), velocityY(0), isJumping(false), isCrouching(false)
+
+Player::Player(QGraphicsTextItem *score, QGraphicsItem *parent)
+    : QObject(), QGraphicsPixmapItem(parent),
+    velocityX(0), velocityY(0),
+    isJumping(false), isCrouching(false),
+    movingLeft(false), movingRight(false),
+    rightside(true), isattacking(false),
+    jumpnum(0),
+    movementTimer(new QTimer(this)),
+    healthBar(new QGraphicsRectItem(0, 0, 100, 10, this)),
+    health(100),
+    moveSpeed(5.0), gravity(0.5), jumpStrength(-12.0),
+    scoreText(score)
 {
-    healthBar = new QGraphicsRectItem(0, 0, 100, 10, this);
+    // Initialize health bar
     healthBar->setBrush(Qt::green);
     healthBar->setPos(0, -20);
 
+    // Load and scale pixmaps
     standingPixmap = QPixmap(":/images/images/PRINCE_OF_PERSIA_MAIN_CHARACTER-removebg-preview.png")
-    .scaled(100, 100, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+                         .scaled(standingHeight, standingHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation);
     attackingPixmap = QPixmap("C:/CS2CourseProject/codework/images/images/Prince_of_persia_character_attacking-removebg-preview.png")
-                          .scaled(100, 100, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-    crouchingPixmap = standingPixmap.scaled(100, crouchingheight, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+                          .scaled(standingHeight, standingHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    crouchingPixmap = standingPixmap.scaled(standingPixmap.width(), crouchingHeight, Qt::KeepAspectRatio, Qt::SmoothTransformation);
 
     setPixmap(standingPixmap);
 
-    movementTimer = new QTimer(this);
+    // Start movement timer
     connect(movementTimer, &QTimer::timeout, this, &Player::physics);
     movementTimer->start(16);
+
+    // Enable keyboard input
     setFlag(QGraphicsItem::ItemIsFocusable);
     setFocus();
 }
 
 void Player::keyPressEvent(QKeyEvent *event)
 {
-    switch(event->key()) {
+    switch (event->key()) {
     case Qt::Key_Left:
         movingLeft = true;
         velocityX = -moveSpeed;
         if (rightside) {
-            QTransform transform;
-            transform.scale(-1, 1);
-            setTransform(transform);
+            QTransform t;
+            t.scale(-1, 1);
+            setTransform(t);
             rightside = false;
         }
-<<<<<<< HEAD
         break;
+
     case Qt::Key_Right:
         movingRight = true;
         velocityX = moveSpeed;
-=======
-        if(x() <= 150){
-            QMessageBox::information(nullptr, "Congratulations", "Level 1 Complete!");
-        }
-    }
-    else if (event->key() == Qt::Key_Right && !isJumping)
-    {
-        setPos(x() + moveSpeed, y());
->>>>>>> 77e3244 (game polished and ending of level 1 implemented)
         if (!rightside) {
             setTransform(QTransform());
             rightside = true;
         }
-<<<<<<< HEAD
         break;
+
     case Qt::Key_Up:
-        if (!isJumping && !isCrouching) {
-=======
-        if(x() <= 150){
-            QMessageBox::information(nullptr, "Congratulations", "Level 1 Complete!");
-        }
-    }
-    else if (event->key() == Qt::Key_Up && !isCrouching)
-    {
-        if (jumpnum < 2)
-        {
->>>>>>> 77e3244 (game polished and ending of level 1 implemented)
+        if (!isJumping && jumpnum < 2) {
             velocityY = jumpStrength;
             isJumping = true;
+            ++jumpnum;
         }
         break;
+
     case Qt::Key_Down:
         if (!isJumping && !isCrouching) {
             isCrouching = true;
             setPixmap(crouchingPixmap);
-            setPos(x(), y() + (standingheight - crouchingheight));
+            setPos(x(), y() + (standingHeight - crouchingHeight));
         }
-<<<<<<< HEAD
         break;
-    case Qt::Key_Space:
-        if (!isattacking) {
-            setPixmap(attackingPixmap);
-=======
-        if(x() <= 150){
-             QMessageBox::information(nullptr, "Congratulations", "Level 1 Complete!");
-        }
-    }
-    else if (event->key() == Qt::Key_Right && isJumping && !isCrouching)
-    {
-        setPos(x() + moveSpeed + 60, y());
-        if (!rightside) {
-            QTransform transform;
-            setTransform(transform);
-            rightside = true;
-        }
-        if(x() <= 150){
-            QMessageBox::information(nullptr, "Congratulations", "Level 1 Complete!");
-        }
-    }
-    else if (event->key() == Qt::Key_Down && !isJumping && !isCrouching)
-    {
-        isCrouching = true;
-        setPixmap(crouchingPixmap);
 
-        setPos(x(), y() + (standingheight - crouchingheight));
-        }
-    else if (event->key() == Qt::Key_Space && !isattacking)
-    {
-        setPixmap(attackingPixmap);
->>>>>>> 77e3244 (game polished and ending of level 1 implemented)
-            isattacking = true;
-        } else {
-            setPixmap(standingPixmap);
-            isattacking = false;
-        }
+    case Qt::Key_Space:
+        isattacking = !isattacking;
+        setPixmap(isattacking ? attackingPixmap : standingPixmap);
         break;
+
     default:
         QGraphicsPixmapItem::keyPressEvent(event);
     }
@@ -135,12 +94,10 @@ void Player::keyReleaseEvent(QKeyEvent *event)
     if (event->key() == Qt::Key_Left) {
         movingLeft = false;
         if (!movingRight) velocityX = 0;
-    }
-    else if (event->key() == Qt::Key_Right) {
+    } else if (event->key() == Qt::Key_Right) {
         movingRight = false;
         if (!movingLeft) velocityX = 0;
-    }
-    else {
+    } else {
         QGraphicsPixmapItem::keyReleaseEvent(event);
     }
 }
@@ -150,31 +107,22 @@ void Player::physics()
     // Apply gravity
     velocityY += gravity;
 
-    // Potential positions
-    qreal nextX = x() + velocityX;
-    qreal nextY = y() + velocityY;
+    // Next position
+    qreal nx = x() + velocityX;
+    qreal ny = y() + velocityY;
 
-<<<<<<< HEAD
-    // Move and handle floor collision
-    setPos(nextX, nextY);
-    if (y() >= 450) {
-        setPos(nextX, 450);
-=======
-    if (y() >= 300)
-    {
-        setPos(x(), 300);
->>>>>>> 77e3244 (game polished and ending of level 1 implemented)
+    // Simple ground collision
+    if (ny >= 450) {
+        ny = 450;
         velocityY = 0;
         isJumping = false;
         jumpnum = 0;
     }
+    setPos(nx, ny);
 
-    // Collision with Traps
-    QList<QGraphicsItem *> colliding = collidingItems();
-    for (QGraphicsItem *item : colliding) {
-        Trap *trap = dynamic_cast<Trap *>(item);
-        if (trap) {
-            isDying = true;
+    // Collision with traps
+    for (QGraphicsItem *item : collidingItems()) {
+        if (Trap *trap = dynamic_cast<Trap *>(item)) {
             updateHealth(25);
             qDebug() << "Player hit a trap!";
             return;
@@ -184,15 +132,10 @@ void Player::physics()
 
 void Player::updateHealth(int damage)
 {
-    health = health - damage;
-    if (health < 0) health = 0;
-
+    health = qMax(0, health - damage);
     healthBar->setRect(0, 0, health, 10);
-
-    if (health == 0)
-    {
-
+    if (health == 0) {
         QMessageBox::information(nullptr, "Game Over", "You Died!");
-         emit playerDied();
-}
+        emit playerDied();
+    }
 }
